@@ -80,6 +80,27 @@ The provider alone is inert — sessions need a delegation tool row. Copy the sh
 
 Sessions composed from that preset can then call `subagent_codex`.
 
+### Background runs / 后台任务
+
+One-shot background delegation works out of the box — the tool gains a
+`run_in_background` parameter (results collected with `job_output`, cancelled
+with `job_kill`). Enable it with `enableRunInBackground: true` in the tool row:
+
+```yaml
+- id: tool-subagent-codex
+  name: '@deepseek-ai/dsh-tool-subagent'
+  config:
+    provider: codex
+    toolName: subagent_codex
+    enableRunInBackground: true
+    maxDepth: provider-managed
+```
+
+A background `codex exec` runs as a plain task under the `jobs` service; killing
+the job aborts the request signal and terminates the Codex process tree.
+Continuable conversations (`backgroundMode: continuable`) are **not** supported —
+Codex is a one-shot CLI backend, not a DSH agent session.
+
 ## Configuration / 配置
 
 | Field | Default | Description |
