@@ -1,0 +1,14 @@
+# dsh-subagent-codex bundle patch.
+#
+# Applied when this package is listed in your profile's `dsh.profile.bundles`
+# (see the profile package.json) or included through a --patch overlay.
+# Registers the `codex` subagent provider on the HOST plane (the `subagents`
+# registry is a process singleton; providers must register here, never in an
+# agent preset).
+#
+# The delegation TOOL is contributed by an agent preset instead: enable the
+# shipped `tool-subagent-codex` row (copy your preset, remove `disabled`) or
+# add an equivalent row so sessions can call `subagent_codex`.
+- insert:
+    - id: codex-subagent
+      name: 'dsh-subagent-codex'
