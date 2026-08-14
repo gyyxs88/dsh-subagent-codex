@@ -10,8 +10,9 @@ Run [OpenAI Codex CLI](https://github.com/openai/codex) as a **subagent backend*
 
 - **Plane: host.** The plugin registers a `SubagentProvider` named `codex` on the host's
   `subagents` registry (a process singleton — providers must live here, never in an agent preset).
-- **Delegation.** A preset's `tool-subagent` row (`provider: codex`) exposes the `subagent_codex`
-  tool; each call spawns `node <codex.js> exec --json …` with the prompt delivered on **stdin**,
+- **Delegation.** A preset's `dsh-subagent-codex/tool` row exposes the `subagent_codex`
+  tool; each call can override `model` and `reasoning_effort`, then spawns
+  `node <codex.js> exec --json …` with the prompt delivered on **stdin**,
   parses the **JSONL event stream** from stdout (`item.completed` / `agent_message` is the final
   answer), collects stderr for diagnostics, and maps the exit to DSH's
   `completed | aborted | error` stop reasons.
@@ -64,21 +65,35 @@ Alternatively, add the row manually to your host composition (e.g. a `--patch` o
 
 ## Expose the tool in a preset / 在预设中暴露工具
 
-The provider alone is inert — sessions need a delegation tool row. Copy the shipped
-`tool-subagent-codex` template from any full preset and remove `disabled`:
+The provider alone is inert — sessions need this package's Codex-specific delegation tool row:
 
 ```yaml
 # inside your preset's agent.cordis.yml, delegation group
 - id: tool-subagent-codex
-  name: '@deepseek-ai/dsh-tool-subagent'
+  name: 'dsh-subagent-codex/tool'
   config:
     provider: codex
     toolName: subagent_codex
-    enableRunInBackground: false
+    enableRunInBackground: true
     maxDepth: provider-managed
 ```
 
 Sessions composed from that preset can then call `subagent_codex`.
+
+Each call may select its own model and reasoning effort. Omitting either field preserves the
+corresponding value from the Codex CLI configuration:
+
+```json
+{
+  "description": "review auth flow",
+  "prompt": "Review the authentication flow and report concrete defects.",
+  "model": "gpt-5.6-sol",
+  "reasoning_effort": "xhigh",
+  "run_in_background": true
+}
+```
+
+Supported `reasoning_effort` values are `low`, `medium`, `high`, `xhigh`, `ultra`, and `max`.
 
 ### Background runs / 后台任务
 
@@ -88,7 +103,7 @@ with `job_kill`). Enable it with `enableRunInBackground: true` in the tool row:
 
 ```yaml
 - id: tool-subagent-codex
-  name: '@deepseek-ai/dsh-tool-subagent'
+  name: 'dsh-subagent-codex/tool'
   config:
     provider: codex
     toolName: subagent_codex
@@ -111,14 +126,18 @@ Codex is a one-shot CLI backend, not a DSH agent session.
 | `cwd` | parent session cwd | Absolute working directory override for codex runs. |
 | `sandboxMode` | `inherit` | `inherit` \| `read-only` \| `workspace-write` \| `danger-full-access`. |
 
+The model-facing tool additionally accepts per-call `model` and `reasoning_effort` fields.
+They are passed as separate argv entries (`-m <model>` and
+`-c model_reasoning_effort="<effort>"`), never through a shell.
+
 ## Capabilities / 能力边界
 
-- One-shot foreground delegations only (no continuable conversations, no background jobs) —
-  mirror the shipped template's `enableRunInBackground: false`.
+- One-shot foreground and one-shot background delegations are supported; continuable
+  conversations are not.
 - `persona` is supported (prepended to the prompt); `outputSchema`, `depthLimit` and
   `toolFilter` are declared unsupported and rejected loudly at start.
-- Codex runs its own model (whatever your `~/.codex/config.toml` selects); DSH does not
-  select or meter it.
+- Each call may override the Codex CLI model and reasoning effort. Omitted values continue to
+  come from `~/.codex/config.toml`; DSH does not meter the Codex model usage.
 
 ## License
 

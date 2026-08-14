@@ -17,8 +17,25 @@ export interface CodexSubagentConfig {
   sandboxMode?: 'inherit' | 'read-only' | 'workspace-write' | 'danger-full-access'
 }
 
+export declare const CODEX_REASONING_EFFORTS: readonly ['low', 'medium', 'high', 'xhigh', 'ultra', 'max']
+export type CodexReasoningEffort = (typeof CODEX_REASONING_EFFORTS)[number]
+
+export interface CodexPerCallOptions {
+  /** Optional Codex model override; omitted values use the Codex CLI configuration. */
+  model?: string
+  /** Optional Codex reasoning-effort override; omitted values use the Codex CLI configuration. */
+  reasoningEffort?: CodexReasoningEffort
+}
+
+export interface CodexInvocationRequest {
+  codexOptions?: CodexPerCallOptions
+  agentOptions?: { provider?: string; model?: string; maxTokens?: number }
+}
+
 export declare const name: string
 export declare const inject: string[]
 export declare const Config: import('@deepseek-ai/schemastery').Schemastery<CodexSubagentConfig, CodexSubagentConfig>
+
+export declare function codexInvocationArgs(request: CodexInvocationRequest): string[]
 
 export declare function apply(ctx: import('@deepseek-ai/cordis').Context, config: CodexSubagentConfig): void
