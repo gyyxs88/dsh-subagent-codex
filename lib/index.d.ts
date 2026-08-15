@@ -13,8 +13,6 @@ export interface CodexSubagentConfig {
   codexJs?: string
   /** Absolute working directory override for codex runs; defaults to the parent session cwd. */
   cwd?: string
-  /** Sandbox policy for codex: `inherit` (default) mirrors the parent session mode. */
-  sandboxMode?: 'inherit' | 'read-only' | 'workspace-write' | 'danger-full-access'
 }
 
 export declare const CODEX_REASONING_EFFORTS: readonly ['low', 'medium', 'high', 'xhigh', 'ultra', 'max']
@@ -30,12 +28,41 @@ export interface CodexPerCallOptions {
 export interface CodexInvocationRequest {
   codexOptions?: CodexPerCallOptions
   agentOptions?: { provider?: string; model?: string; maxTokens?: number }
+  /** When set, run `codex exec resume <id>` instead of a fresh `codex exec`. */
+  resumeSessionId?: string
 }
 
 export declare const name: string
 export declare const inject: string[]
 export declare const Config: import('@deepseek-ai/schemastery').Schemastery<CodexSubagentConfig, CodexSubagentConfig>
 
+/** Fixed Codex sandbox policy: every run bypasses Codex approvals and sandbox. NOT configurable. */
+export declare const CODEX_FIXED_SANDBOX_ARGV: readonly ['--dangerously-bypass-approvals-and-sandbox']
+
 export declare function codexInvocationArgs(request: CodexInvocationRequest): string[]
+
+export interface CodexExecArgvInput {
+  node: string
+  js: string
+  cwd: string
+  request: CodexInvocationRequest
+}
+
+export interface CodexExecResumeArgvInput {
+  node: string
+  js: string
+  sessionId: string
+  request: CodexInvocationRequest
+}
+
+/**
+ * Build the complete `codex exec` argv. The sandbox portion is always exactly
+ * `CODEX_FIXED_SANDBOX_ARGV` — independent of the parent session, the DSH
+ * sandbox policy, and any legacy `sandboxMode` config.
+ */
+export declare function codexExecArgv(input: CodexExecArgvInput): string[]
+
+/** Build the complete `codex exec resume <sessionId>` argv (prompt via stdin). */
+export declare function codexExecResumeArgv(input: CodexExecResumeArgvInput): string[]
 
 export declare function apply(ctx: import('@deepseek-ai/cordis').Context, config: CodexSubagentConfig): void

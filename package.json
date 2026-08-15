@@ -14,6 +14,14 @@
       "types": "./lib/tool.d.ts",
       "default": "./lib/tool.js"
     },
+    "./app-server": {
+      "types": "./lib/app-server.d.ts",
+      "default": "./lib/app-server.js"
+    },
+    "./session-tools": {
+      "types": "./lib/session-tools.d.ts",
+      "default": "./lib/session-tools.js"
+    },
     "./package.json": "./package.json"
   },
   "dsh": {
@@ -26,6 +34,10 @@
     "lib/index.d.ts",
     "lib/tool.js",
     "lib/tool.d.ts",
+    "lib/app-server.js",
+    "lib/app-server.d.ts",
+    "lib/session-tools.js",
+    "lib/session-tools.d.ts",
     "cordis.patch.yml",
     "README.md",
     "LICENSE"
